@@ -122,7 +122,7 @@ with col1:
     filter_by_region = st.checkbox("Filtrer par région", value=True)
     
     if filter_by_region:
-        regions = ["Occitanie", "Nouvelle-Aquitaine", "Auvergne-Rhône-Alpes", "Provence-Alpes-Côte d'Azur", 
+        regions = ["France entière", "Occitanie", "Nouvelle-Aquitaine", "Auvergne-Rhône-Alpes", "Provence-Alpes-Côte d'Azur", 
                   "Île-de-France", "Hauts-de-France", "Grand Est", "Bourgogne-Franche-Comté", 
                   "Centre-Val de Loire", "Pays de la Loire", "Bretagne", "Normandie", "Corse"]
         selected_region = st.selectbox("Sélectionner une région", regions, index=0)
@@ -146,7 +146,7 @@ with col1:
                     gdf = gpd.read_file(uploaded_file)
                 
                 # Filtrer par région si demandé
-                if filter_by_region:
+                if filter_by_region and selected_region != "France entière":
                     with st.spinner(f"Filtrage des données pour la région {selected_region}..."):
                         # Vérifier si une colonne 'region' ou similaire existe
                         region_cols = [col for col in gdf.columns if 'region' in col.lower() or 'reg' == col.lower()]
@@ -185,6 +185,8 @@ with col1:
                                     st.warning("Aucune zone trouvée dans la bbox de l'Occitanie. Utilisation de toutes les données.")
                             else:
                                 st.warning(f"Impossible de filtrer automatiquement pour {selected_region}. Aucune colonne 'region' trouvée.")
+                elif filter_by_region and selected_region == "France entière":
+                    st.info(f"Utilisation de l'ensemble des données: {len(gdf)} zones au total pour la France entière")
                 
                 data_source = gdf
                 file_type = "gpkg"
