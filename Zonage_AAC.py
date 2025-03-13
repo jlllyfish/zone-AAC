@@ -122,9 +122,9 @@ with col1:
     filter_by_region = st.checkbox("Filtrer par région", value=True)
     
     if filter_by_region:
-        regions = ["France entière", "Occitanie", "Nouvelle-Aquitaine", "Auvergne-Rhône-Alpes", "Provence-Alpes-Côte d'Azur", 
+        regions = ["Occitanie", "Nouvelle-Aquitaine", "Auvergne-Rhône-Alpes", "Provence-Alpes-Côte d'Azur", 
                   "Île-de-France", "Hauts-de-France", "Grand Est", "Bourgogne-Franche-Comté", 
-                  "Centre-Val de Loire", "Pays de la Loire", "Bretagne", "Normandie", "Corse"]
+                  "Centre-Val de Loire", "Pays de la Loire", "Bretagne", "Normandie", "Corse", "France entière"]
         selected_region = st.selectbox("Sélectionner une région", regions, index=0)
     
     if uploaded_file:
