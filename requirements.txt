@@ -2,6 +2,7 @@
 streamlit>=1.30.0
 numpy>=1.26.0
 pandas>=2.2.0
+geopandas>=0.14.0
 shapely>=2.0.2
 folium>=0.14.0
 streamlit-folium>=0.15.0
