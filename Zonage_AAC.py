@@ -488,11 +488,107 @@ with col2:
                         # Carte de base
                         m = folium.Map(location=[lat, lon], zoom_start=12)
                         
-                        # Ajouter les zones AAC et le marqueur (comme dans le mode Adresse)
-                        # ... (le reste du code est identique)
+                        # Ajouter les zones AAC
+                        if file_type == "geojson":
+                            for feature in data_source['features']:
+                                try:
+                                    # Style de base
+                                    style = {
+                                        'fillColor': '#81C6E8',
+                                        'color': '#1F75C4',
+                                        'fillOpacity': 0.4,
+                                        'weight': 1.5
+                                    }
+                                    
+                                    # Mettre en évidence la zone si on est dedans
+                                    if in_aac and properties == feature['properties']:
+                                        style = {
+                                            'fillColor': '#4CAF50',
+                                            'color': '#2E7D32',
+                                            'fillOpacity': 0.6,
+                                            'weight': 2.5
+                                        }
+                                    
+                                    # Ajouter le polygone
+                                    folium.GeoJson(
+                                        feature,
+                                        style_function=lambda x, style=style: style
+                                    ).add_to(m)
+                                except:
+                                    continue
+                        elif file_type == "gpkg":
+                            # Afficher un message pour informer l'utilisateur
+                            with st.spinner("Chargement des zones sur la carte (cela peut prendre un moment)..."):
+                                try:
+                                    # Convertir tout le GeoDataFrame en GeoJSON pour l'affichage
+                                    # Simplifier les géométries pour améliorer les performances
+                                    simplified_gdf = data_source.copy()
+                                    
+                                    # Simplification adaptative selon le nombre de zones
+                                    if len(simplified_gdf) > 500:
+                                        tolerance = 0.003  # Plus grande simplification pour de nombreuses zones
+                                    else:
+                                        tolerance = 0.001
+                                        
+                                    simplified_gdf['geometry'] = simplified_gdf['geometry'].simplify(tolerance=tolerance)
+                                    
+                                    # Convertir le CRS en WGS84 si nécessaire
+                                    if simplified_gdf.crs and simplified_gdf.crs != "EPSG:4326":
+                                        simplified_gdf = simplified_gdf.to_crs("EPSG:4326")
+                                    
+                                    # Créer un style_function qui vérifie chaque feature
+                                    def style_function(feature):
+                                        # Style de base
+                                        style = {
+                                            'fillColor': '#81C6E8',
+                                            'color': '#1F75C4',
+                                            'fillOpacity': 0.4,
+                                            'weight': 1.5
+                                        }
+                                        
+                                        # Vérifier si c'est la zone active
+                                        if in_aac and properties:
+                                            feature_props = feature['properties']
+                                            # Comparer les propriétés principales (peut nécessiter des ajustements)
+                                            matches = all(str(feature_props.get(k)) == str(properties.get(k)) 
+                                                        for k in properties.keys() 
+                                                        if k in feature_props and k != 'geometry')
+                                            
+                                            if matches:
+                                                style = {
+                                                    'fillColor': '#4CAF50',
+                                                    'color': '#2E7D32',
+                                                    'fillOpacity': 0.6,
+                                                    'weight': 2.5
+                                                }
+                                        
+                                        return style
+                                    
+                                    # Convertir tout le GeoDataFrame en GeoJSON puis l'ajouter à la carte
+                                    geojson_data = simplified_gdf.to_json()
+                                    folium.GeoJson(
+                                        geojson_data,
+                                        style_function=style_function
+                                    ).add_to(m)
+                                    
+                                except Exception as e:
+                                    st.error(f"Erreur lors de l'affichage des zones: {str(e)}")
+                        
+                        # Ajouter le marqueur APRÈS les polygones
+                        marker_color = "green" if in_aac else "red"
+                        folium.Marker(
+                            [lat, lon],
+                            popup=f"<b>Coordonnées: {lat}, {lon}</b>",
+                            icon=folium.Icon(color=marker_color, icon="info-sign")
+                        ).add_to(m)
                         
                         # Afficher la carte
                         st_folium(m, width=900, height=500, returned_objects=[])
+                        
+                        # Ajouter un bouton pour refaire une recherche
+                        if st.button("🔄 Faire une nouvelle recherche", key="new_search_coords"):
+                            st.session_state.reset_pressed = True
+                            st.rerun()  # Forcer le rechargement de la page
 
 # Pied de page
 st.markdown("---")
